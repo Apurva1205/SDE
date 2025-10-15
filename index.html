@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDE Demo: Echo Protocol - Alpha</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'sde-dark': '#1c1c24',
+                        'sde-mid': '#2a2a35',
+                        'sde-accent': '#4f46e5', // Indigo
+                        'sde-success': '#10b981', // Emerald
+                        'sde-error': '#ef4444',   // Red
+                        'sde-info': '#60a5fa',    // Blue
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .console-log {
+            max-height: 250px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+        /* Custom styles for the demo script items */
+        .step-indicator {
+            @apply inline-flex items-center justify-center w-6 h-6 mr-2 text-xs font-semibold text-white bg-sde-accent rounded-full;
+        }
+
+        /* Phase Pulse Animation */
+        @keyframes pulse-accent {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .phase-pulse {
+            animation: pulse-accent 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-sde-dark text-gray-100 min-h-screen p-4 sm:p-8">
+
+    <div id="app" class="max-w-6xl mx-auto">
+        <header class="mb-8 border-b border-sde-mid pb-4">
+            <h1 class="text-3xl font-bold text-white">Social Dynamics Engine (SDE) - Demo: Echo Protocol Alpha</h1>
+            <p class="text-sde-accent">Simulating Microservices (GSM, AI, Flowise) for Rapid Development</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- GAME STATE AND ACTIONS COLUMN (1/3) -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Player Status -->
+                <div class="bg-sde-mid p-5 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-2">Game State & Player Roster</h2>
+                    <div id="status-display" class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <!-- Content populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Game Log / Narrative Orchestrator -->
+                <div class="bg-sde-mid p-5 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-2">Narrative / Event Log (Flowise & GSM Events)</h2>
+                    <div id="game-log" class="console-log bg-sde-dark p-3 rounded-lg text-gray-300 text-sm">
+                        <!-- Content populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Action Panel (Human Player View) -->
+                <div class="bg-sde-mid p-5 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-2">Human Analyst Action Panel (Night Phase)</h2>
+                    <div id="action-panel" class="space-y-3">
+                        <p id="action-hint" class="text-sde-info italic">Awaiting Phase Change...</p>
+                        <!-- Target selection populated by JS -->
+                        <div id="vote-tally-display" class="hidden mt-4 pt-3 border-t border-gray-700">
+                             <h3 class="font-bold text-lg mb-2">Live Vote Tally (Simulated)</h3>
+                             <div id="tally-results" class="grid grid-cols-2 gap-2 text-base"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROL AND TELEMETRY COLUMN (1/3) -->
+            <div class="space-y-6">
+                 <!-- Demo Control Panel -->
+                <div class="bg-sde-mid p-5 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-2">Demo Control Panel</h2>
+                    <p id="current-phase" class="text-lg font-mono text-sde-success mb-4 phase-pulse">LOBBY</p>
+
+                    <button id="advance-button" onclick="advanceDemo()" class="w-full py-3 px-4 bg-sde-accent hover:bg-indigo-700 text-white font-bold rounded-lg transition duration-150 shadow-md">
+                        <span id="button-text">Start Match (Step 1/4)</span>
+                    </button>
+                    <p class="text-sm text-gray-400 mt-2 italic">Follow the steps below to run the 5-minute demo script.</p>
+                </div>
+
+                <!-- Hot-Reload & Telemetry -->
+                <div id="hot-reload-card" class="bg-sde-mid p-5 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-2">Advanced Features Demo</h2>
+                    
+                    <!-- Hot Reload -->
+                    <p class="text-gray-300 mb-2 font-medium">Current Config: Analyst Cooldown = <span id="cooldown-value" class="text-sde-info font-mono">1</span></p>
+                    <button id="hot-reload-button" onclick="hotReloadConfig()" disabled class="w-full py-2 px-4 bg-gray-600 text-white font-bold rounded-lg transition duration-150 hover:bg-gray-500">
+                        Demonstrate Hot-Reload (Cooldown → 0)
+                    </button>
+                    <p class="text-sm text-gray-400 mt-2">Simulates applying config changes without a server restart.</p>
+
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <h3 class="font-bold mb-2">Telemetry Snapshot (Match End)</h3>
+                        <pre id="telemetry-snapshot" class="bg-sde-dark p-3 rounded-lg text-xs overflow-x-auto text-gray-400">Awaiting match end...</pre>
+                    </div>
+
+                </div>
+
+                 <!-- Script Checklist -->
+                <div class="bg-sde-mid p-5 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-2">Demo Script Checklist</h2>
+                    <ul class="text-gray-300 space-y-2 text-sm" id="demo-checklist">
+                        <li id="step-1"><span class="step-indicator">1</span> **Start:** Lobby fills (3H, 3AI) → Night 1.</li>
+                        <li id="step-2"><span class="step-indicator">2</span> **Night Action:** Human Analyst inspects; AI Saboteur kills.</li>
+                        <li id="step-3"><span class="step-indicator">3</span> **Day Phase:** Flowise rumor spawns; live voting & tie-break.</li>
+                        <li id="step-4"><span class="step-indicator">4</span> **Resolve & Reload:** Reveal results; show telemetry; hot-reload demo.</li>
+                    </ul>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase (Required boilerplate, not used for core demo logic) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sde-demo-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { projectId: 'mock-project' };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            setLogLevel('Debug');
+
+            // Sign in logic
+            if (initialAuthToken) {
+                signInWithCustomToken(auth, initialAuthToken)
+                    .then(() => console.log("Firebase: Signed in with custom token."))
+                    .catch(error => console.error("Firebase: Custom token sign-in failed.", error));
+            } else {
+                signInAnonymously(auth)
+                    .then(() => console.log("Firebase: Signed in anonymously."))
+                    .catch(error => console.error("Firebase: Anonymous sign-in failed.", error));
+            }
+        } catch (e) {
+            console.error("Firebase: Initialization skipped in simulation mode.", e);
+        }
+    </script>
+
+    <!-- SDE Simulation Logic -->
+    <script>
+        // --- SDE GSM SIMULATION CONFIG (YAML/JSON Layer) ---
+        let gameConfig = {
+            roles: [
+                { id: 'analyst', team: 'town', type: 'human', power: 'inspect', cooldown: 1, icon: '👁️', color: 'text-sde-success' },
+                { id: 'saboteur', team: 'wolf', type: 'ai', power: 'night_kill', cooldown: 0, icon: '🐺', color: 'text-sde-error' },
+                { id: 'town_guard', team: 'town', type: 'human', power: 'protect', cooldown: 0, icon: '🛡️', color: 'text-gray-400' },
+                { id: 'villager', team: 'town', type: 'human', power: 'none', cooldown: 0, icon: '👤', color: 'text-gray-400' },
+                { id: 'ai_villager_1', team: 'town', type: 'ai', power: 'none', cooldown: 0, icon: '🤖', color: 'text-gray-400' },
+                { id: 'ai_villager_2', team: 'town', type: 'ai', power: 'none', cooldown: 0, icon: '🤖', color: 'text-gray-400' },
+            ],
+            players: [
+                { id: 'p0', name: 'Analyst (H)', roleId: 'analyst', isAlive: true, isHuman: true, votes: 0, target: null },
+                { id: 'p1', name: 'Saboteur (AI)', roleId: 'saboteur', isAlive: true, isHuman: false, votes: 0, target: null },
+                { id: 'p2', name: 'Guard (H)', roleId: 'town_guard', isAlive: true, isHuman: true, votes: 0, target: null },
+                { id: 'p3', name: 'Villager A (H)', roleId: 'villager', isAlive: true, isHuman: true, votes: 0, target: null },
+                { id: 'p4', name: 'AI Villager 1', roleId: 'ai_villager_1', isAlive: true, isHuman: false, votes: 0, target: null },
+                { id: 'p5', name: 'AI Villager 2', roleId: 'ai_villager_2', isAlive: true, isHuman: false, votes: 0, target: null },
+            ],
+            phases: ['LOBBY', 'NIGHT_1', 'DAY_1', 'VOTE_1', 'RESOLUTION_1'],
+            currentPhaseIndex: 0,
+            demoStep: 0,
+            analystActionReady: false,
+        };
+        
+        // --- DEMO CORE LOGIC ---
+        const gameLog = document.getElementById('game-log');
+        const statusDisplay = document.getElementById('status-display');
+        const currentPhaseEl = document.getElementById('current-phase');
+        const advanceButton = document.getElementById('advance-button');
+        const buttonText = document.getElementById('button-text');
+        const actionHint = document.getElementById('action-hint');
+        const actionPanel = document.getElementById('action-panel');
+        const hotReloadButton = document.getElementById('hot-reload-button');
+        const cooldownValueEl = document.getElementById('cooldown-value');
+        const tallyDisplay = document.getElementById('vote-tally-display');
+        const tallyResultsEl = document.getElementById('tally-results');
+
+        function logEvent(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            let color = 'text-gray-300';
+            if (type === 'system') color = 'text-sde-accent font-semibold';
+            if (type === 'ai_action') color = 'text-sde-error';
+            if (type === 'narrative') color = 'text-yellow-400 italic';
+            if (type === 'result') color = 'text-sde-success font-bold';
+
+            const logEntry = `<p class="p-1 border-b border-gray-800"><span class="font-mono text-xs text-gray-500">[${time}]</span> <span class="${color}">${message}</span></p>`;
+            gameLog.innerHTML = logEntry + gameLog.innerHTML;
+        }
+
+        function getRoleIcon(roleId) {
+             return gameConfig.roles.find(r => r.id === roleId)?.icon || '❓';
+        }
+
+        function updatePlayerStatus() {
+            const playersHtml = gameConfig.players.map(p => {
+                const role = gameConfig.roles.find(r => r.id === p.roleId);
+                const roleName = role.id.toUpperCase();
+                const status = p.isAlive ? 'Alive' : 'Eliminated';
+                const statusColor = p.isAlive ? 'bg-sde-success' : 'bg-sde-error';
+                const nameColor = p.isAlive ? 'text-white' : 'text-gray-500 line-through italic';
+
+                return `
+                    <div class="p-3 rounded-lg shadow-md flex items-center ${p.isAlive ? 'bg-sde-dark hover:bg-gray-800' : 'bg-gray-800 opacity-60'} transition">
+                        <span class="text-xl mr-3">${getRoleIcon(p.roleId)}</span>
+                        <div>
+                            <span class="text-xs font-semibold ${nameColor}">${p.name}</span>
+                            <p class="text-xs ${role.color} mt-0.5">${roleName} (${p.isHuman ? 'H' : 'AI'})</p>
+                            <div class="mt-1 flex items-center">
+                                <span class="inline-block w-2 h-2 rounded-full mr-2 ${statusColor}"></span>
+                                <span class="text-xs text-gray-400">${status}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            statusDisplay.innerHTML = playersHtml;
+        }
+
+        function updatePhaseDisplay() {
+            const phase = gameConfig.phases[gameConfig.currentPhaseIndex];
+            currentPhaseEl.textContent = phase.replace('_', ' ');
+
+            // Apply pulse effect based on phase
+            if (phase === 'NIGHT_1' || phase === 'VOTE_1') {
+                currentPhaseEl.classList.add('phase-pulse');
+            } else {
+                 currentPhaseEl.classList.remove('phase-pulse');
+            }
+        }
+
+        function updateChecklist() {
+             document.querySelectorAll('#demo-checklist li').forEach((li, index) => {
+                // Adjust index check since demoStep starts at 0 for step 1
+                if (index < gameConfig.demoStep) {
+                    li.classList.add('line-through', 'opacity-50');
+                } else {
+                    li.classList.remove('line-through', 'opacity-50');
+                }
+            });
+        }
+
+        // --- PHASE ACTIONS ---
+
+        // Step 1: Start Match / Transition to Night 1
+        function step1_startNight() {
+            gameConfig.currentPhaseIndex = 1; // NIGHT_1
+            gameConfig.demoStep = 1;
+            logEvent(`Match started (GSM Event: match.start). Players seated: ${gameConfig.players.length}`, 'system');
+            logEvent(`PHASE CHANGE (GSM Event: phase.changed): Transitioning to NIGHT 1.`, 'system');
+
+            // Enable Analyst actions (p0)
+            const analystRole = gameConfig.roles.find(r => r.id === 'analyst');
+            analystRole.cooldown = 1; // Ensure it starts at 1 for the demo narrative
+            gameConfig.analystActionReady = analystRole.cooldown === 0;
+
+            if (gameConfig.analystActionReady) {
+                renderNightActionPanel();
+                actionHint.textContent = "Your power (Inspect) is ready. Choose a target.";
+                advanceButton.disabled = true;
+                buttonText.textContent = "Waiting for Human Action...";
+            } else {
+                 actionHint.textContent = `Your power (Inspect) is on cooldown: ${analystRole.cooldown} night(s). The Wolf team is acting in secret.`;
+                 advanceButton.disabled = false;
+                 buttonText.textContent = "Advance to Step 2 (Simulate Actions)";
+            }
+
+        }
+
+        // Step 2: Simulate Night Actions (Human & AI)
+        function step2_simulateActions() {
+            // Check if Analyst action was submitted, if required
+            if (gameConfig.analystActionReady && !gameConfig.players[0].target) {
+                logEvent('ERROR: Human Analyst must choose a target for the Inspect action before proceeding.', 'error');
+                return;
+            }
+            
+            gameConfig.demoStep = 2;
+            logEvent(`NIGHT 1 ACTIONS CLOSED (GSM Event: phase.end). Resolving actions...`, 'system');
+
+            // 2a. Human Analyst Action (Simulated)
+            const analystTarget = gameConfig.players[0].target ? gameConfig.players.find(p => p.id === gameConfig.players[0].target).name : 'No Action Taken';
+            logEvent(`Human Action (Analyst: Inspect): Target chosen - ${analystTarget}. Result: Unknown.`, 'system');
+            
+            // 2b. AI Saboteur Action (Simulated GOP) - AI targets the highest threat: Analyst (p0)
+            const saboteur = gameConfig.players.find(p => p.roleId === 'saboteur');
+            const aiTarget = gameConfig.players.find(p => p.id === 'p0'); // AI chooses Analyst (p0)
+            saboteur.target = aiTarget.id;
+
+            logEvent(`AI Action (Saboteur, GOP Agent): Executing Plan: 'Eliminate Highest Threat Target (p0)' over 'Eliminate Lowest Value Target (p3)' due to emergent threat analysis. Target chosen: ${aiTarget.name}`, 'ai_action');
+
+            // Transition to Day 1
+            gameConfig.currentPhaseIndex = 2; // DAY_1
+            setTimeout(() => {
+                logEvent(`PHASE CHANGE (GSM Event: phase.changed): Transitioning to DAY 1 (Discussion Phase).`, 'system');
+                step3_startDay();
+                advanceButton.disabled = false;
+                buttonText.textContent = "Advance to Step 3 (Simulate Vote)";
+            }, 1500);
+        }
+
+        // Step 3: Start Day / Narrative Orchestration
+        function step3_startDay() {
+            // 3a. Flowise Orchestration (Simulated)
+            gameConfig.demoStep = 3;
+            // The Night Kill on p0 (Analyst) is applied here, *before* the Day phase discussion begins.
+            const nightKilledPlayer = gameConfig.players.find(p => p.id === gameConfig.players.find(p => p.roleId === 'saboteur').target);
+            nightKilledPlayer.isAlive = false;
+
+            logEvent(`NIGHT RESOLUTION (GSM Event: reveal.death): ${nightKilledPlayer.name} ${getRoleIcon(nightKilledPlayer.roleId)} has been tragically eliminated overnight.`, 'result');
+            updatePlayerStatus();
+
+            logEvent(`NARRATIVE ORCHESTRATOR (Flowise) sends announcement: 📜`, 'narrative');
+            logEvent(`"The body of the Analyst was found in the server room, but a strange note was clutched in their hand. It simply read: 'The answer lies in the silence.' Focus on who is avoiding eye contact."`, 'narrative');
+
+            // Transition to Vote Phase
+            gameConfig.currentPhaseIndex = 3; // VOTE_1
+            actionHint.textContent = "Discussion finished. The voting phase has started.";
+            renderVotingPanel();
+        }
+
+        // Step 4: Simulate Voting & Tie-Break
+        function step4_simulateVote() {
+            gameConfig.demoStep = 4;
+            logEvent(`VOTING PHASE (GSM Event: vote.start). Players casting ballots...`, 'system');
+
+            // 4a. Simulate Votes (Scenario for Tie-Break: Saboteur and Guard tied)
+            // p0 (Analyst) is dead, no vote
+            // p1 (Saboteur) votes for p2 (Guard)
+            gameConfig.players[1].votes = 1; gameConfig.players[1].target = 'p2';
+            // p2 (Guard) votes for p1 (Saboteur)
+            gameConfig.players[2].votes = 1; gameConfig.players[2].target = 'p1';
+            // p3 (Villager A) votes for p1 (Saboteur) (Still alive, but votes are reset in a real game. For this demo, let's keep it simple.)
+            gameConfig.players[3].votes = 1; gameConfig.players[3].target = 'p1';
+            // p4 (AI Villager 1) votes for p2 (Guard)
+            gameConfig.players[4].votes = 1; gameConfig.players[4].target = 'p2';
+            // p5 (AI Villager 2) votes for p2 (Guard)
+            gameConfig.players[5].votes = 1; gameConfig.players[5].target = 'p2';
+
+            // Tally Results: p1 (Saboteur)=2, p2 (Guard)=3
+            // Wait, this is not a tie. Let's adjust for a tie between p1 and p2 (2 votes each).
+            // Tally Results: p1 (Saboteur)=2, p2 (Guard)=2
+
+            gameConfig.players[1].votes = 1; gameConfig.players[1].target = 'p2'; // Saboteur votes Guard
+            gameConfig.players[2].votes = 1; gameConfig.players[2].target = 'p1'; // Guard votes Saboteur
+            gameConfig.players[3].votes = 1; gameConfig.players[3].target = 'p2'; // Villager A votes Guard
+            gameConfig.players[4].votes = 1; gameConfig.players[4].target = 'p1'; // AI Villager 1 votes Saboteur
+            gameConfig.players[5].votes = 0; // AI Villager 2 abstains for a cleaner tie
+
+            const voteResults = tallyVotes();
+            renderVoteTally(voteResults); // Shows live tally
+
+            // 4b. Simulate Tie-Break Logic
+            logEvent(`VOTING CLOSED (GSM Event: vote.tally). Final Results: ${JSON.stringify(voteResults)}`, 'system');
+
+            const topCount = Object.values(voteResults).reduce((max, current) => Math.max(max, current.count), 0);
+            const tiedTargets = Object.keys(voteResults).filter(targetId => voteResults[targetId].count === topCount && topCount > 1);
+
+            if (tiedTargets.length > 1) {
+                logEvent(`🚨 TIE DETECTED 🚨 between ${tiedTargets.map(id => gameConfig.players.find(p => p.id === id).name).join(' and ')}. Both players have ${topCount} votes.`, 'system');
+                logEvent(`TIE-BREAK STRATEGY (Config: revote_then_random) in effect. Randomly selecting one...`, 'system');
+                const executedPlayerId = tiedTargets[Math.floor(Math.random() * tiedTargets.length)]; // Randomly execute p1 or p2
+                step5_resolve(executedPlayerId);
+            } else if (Object.keys(voteResults).length > 0) {
+                 const executedPlayerId = Object.keys(voteResults).reduce((a, b) => voteResults[a].count > voteResults[b].count ? a : b);
+                 step5_resolve(executedPlayerId);
+            } else {
+                 logEvent('No decisive majority or votes cast. No one is eliminated.', 'result');
+                 gameConfig.currentPhaseIndex = 4;
+                 advanceButton.disabled = false;
+                 buttonText.textContent = "Advance to Next Match (Demo End)";
+            }
+        }
+
+        // Step 5: Resolve
+        function step5_resolve(executedPlayerId) {
+            gameConfig.currentPhaseIndex = 4; // RESOLUTION_1
+
+            // 5a. Night Kill Resolution is already done in Step 3 (Analyst died)
+
+            // 5b. Vote Resolution
+            const executedPlayer = gameConfig.players.find(p => p.id === executedPlayerId);
+            if (executedPlayer && executedPlayer.isAlive) {
+                executedPlayer.isAlive = false;
+                logEvent(`⚖️ DAY RESOLUTION ⚖️ (GSM Event: reveal.death): ${executedPlayer.name} ${getRoleIcon(executedPlayer.roleId)} has been executed by the Town via randomized tie-break.`, 'result');
+            } else {
+                 logEvent(`Vote resolution failed: Player ID ${executedPlayerId} is either null or already dead.`, 'result');
+            }
+            
+            // 5c. Match End & Telemetry
+            updatePlayerStatus();
+            advanceButton.disabled = false;
+            buttonText.textContent = "Show Final Telemetry & Hot-Reload";
+
+            // Prepare Telemetry Snapshot
+            document.getElementById('telemetry-snapshot').textContent = JSON.stringify({
+                matchId: 'sde-match-12345',
+                duration: '4:52',
+                outcome: gameConfig.players.find(p => p.roleId === 'saboteur').isAlive ? 'Inconclusive (Saboteur remains)' : 'Town Victory',
+                eliminations: [
+                    { player: 'Analyst (H)', cause: 'Night Kill', phase: 'NIGHT_1' },
+                    { player: executedPlayer.name, cause: 'Vote Execution (Tie-Break)', phase: 'VOTE_1' }
+                ],
+                finalState: gameConfig.players.map(p => ({ name: p.name, role: p.roleId, alive: p.isAlive, lastVoteTarget: p.target })),
+                aiMetrics: {
+                    saboteurGOPPlan: 'Target Highest Threat (Analyst)',
+                    saboteurGOPPlanSuccess: true,
+                    lieBudgetConsumption: 0.1
+                }
+            }, null, 2);
+            
+            hotReloadButton.disabled = false;
+        }
+
+
+        // --- UI RENDERERS AND HELPERS ---
+
+        function renderNightActionPanel() {
+            if (!gameConfig.analystActionReady) {
+                actionPanel.innerHTML = '<p class="text-sde-info italic">Analyst power on cooldown. Skipping action input.</p>';
+                return;
+            }
+
+            // Human (Analyst) targets everyone except self (p0) and dead players
+            const targets = gameConfig.players.filter(p => p.id !== 'p0' && p.isAlive);
+
+            const selectHtml = `
+                <select id="action-target" class="w-full p-2 bg-sde-dark border border-gray-600 rounded-lg text-white">
+                    <option value="">-- Select Target to Inspect --</option>
+                    ${targets.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+                </select>
+                <button onclick="submitHumanAction()" class="w-full py-2 px-4 bg-sde-success hover:bg-emerald-600 text-white font-bold rounded-lg transition duration-150">
+                    Submit Inspect Action (GSM API Call)
+                </button>
+            `;
+            actionPanel.innerHTML = selectHtml;
+            tallyDisplay.classList.add('hidden');
+        }
+
+        function submitHumanAction() {
+            const selectEl = document.getElementById('action-target');
+            const targetId = selectEl.value;
+
+            if (!targetId) {
+                logEvent('Please select a valid target.', 'error');
+                return;
+            }
+            
+            // Simulating API call and state update
+            gameConfig.players[0].target = targetId;
+            logEvent(`Action submitted (Analyst: Inspect ${gameConfig.players.find(p => p.id === targetId).name}). GSM Event: action.requested`, 'system');
+
+            // Lock controls and prepare for next step
+            actionPanel.innerHTML = '<p class="text-sde-success font-semibold">Action accepted by GSM. Waiting for all actions to resolve...</p>';
+            advanceButton.disabled = false;
+            buttonText.textContent = "Advance to Step 2 (Simulate Actions)";
+        }
+
+        function renderVotingPanel() {
+            // Remove night action panel
+            actionPanel.innerHTML = '<p class="text-sde-info italic">Discussion in progress...</p>';
+            
+            // Show tally display area
+            tallyDisplay.classList.remove('hidden');
+            tallyResultsEl.textContent = 'Awaiting simulated votes...';
+            
+            advanceButton.disabled = false;
+            buttonText.textContent = "Advance to Step 4 (Simulate Vote & Tie-Break)";
+        }
+
+        function tallyVotes() {
+            const tally = {};
+            gameConfig.players.forEach(p => {
+                // p.votes is the weight of the vote (1). p.target is the ID of who they voted for.
+                if (p.isAlive && p.target) { 
+                    const targetId = p.target;
+                    if (!tally[targetId]) {
+                        tally[targetId] = { count: 0, name: gameConfig.players.find(t => t.id === targetId).name };
+                    }
+                    tally[targetId].count += p.votes;
+                }
+            });
+            return tally;
+        }
+
+        function renderVoteTally(tally) {
+            const sortedTally = Object.values(tally).sort((a, b) => b.count - a.count);
+            
+            const tallyHtml = sortedTally.map(t => {
+                const isTie = t.count === sortedTally[0].count && sortedTally.length > 1 && sortedTally[1].count === t.count;
+                const color = isTie ? 'text-yellow-500 font-bold' : (t.count === sortedTally[0].count && t.count > 0 ? 'text-sde-error font-bold' : 'text-gray-300');
+                const status = isTie ? ' (TIED)' : '';
+
+                return `<div class="p-2 bg-sde-dark rounded-md"><span class="${color}">${t.name}${status}</span>: <span class="float-right ${color}">${t.count} Votes</span></div>`;
+            }).join('');
+            tallyResultsEl.innerHTML = tallyHtml || '<p class="text-gray-400">No votes recorded yet.</p>';
+            
+        }
+
+
+        // --- HOT-RELOAD FEATURE ---
+
+        function hotReloadConfig() {
+            // 4. Reveal results + show telemetry. Demonstrate the hot-reload capability.
+            gameConfig.roles.find(r => r.id === 'analyst').cooldown = 0;
+            cooldownValueEl.textContent = 0;
+            hotReloadButton.disabled = true;
+            hotReloadButton.classList.remove('bg-gray-600', 'hover:bg-gray-500');
+            hotReloadButton.classList.add('bg-sde-success', 'hover:bg-emerald-600');
+            document.getElementById('hot-reload-card').classList.add('border-2', 'border-sde-success');
+
+
+            logEvent(`✅ CONFIG RELOADED ✅ (GSM/Config API): Analyst cooldown updated to 0. (Hot-Reloaded in less than 1s)`, 'system');
+            logEvent('🎉 DEMO COMPLETE 🎉. The SDE successfully demonstrated modularity, AI agency, and rapid iteration.', 'result');
+            
+            // Final button state
+            buttonText.textContent = "Start New Demo";
+            advanceButton.onclick = () => window.location.reload();
+            gameConfig.demoStep = 4; // Final step completed
+            updateChecklist();
+        }
+
+
+        // --- DEMO FLOW CONTROLLER ---
+
+        function advanceDemo() {
+            tallyDisplay.classList.add('hidden');
+            switch (gameConfig.demoStep) {
+                case 0:
+                    step1_startNight();
+                    if(gameConfig.analystActionReady) {
+                        advanceButton.disabled = true; // Wait for human action
+                        buttonText.textContent = "Waiting for Human Action...";
+                    } else {
+                        buttonText.textContent = "Advance to Step 2 (Simulate Actions)";
+                    }
+                    break;
+                case 1:
+                    step2_simulateActions();
+                    buttonText.textContent = "Advance to Step 3 (Simulate Vote)";
+                    break;
+                case 2:
+                    step4_simulateVote();
+                    buttonText.textContent = "Show Final Telemetry & Hot-Reload";
+                    break;
+                case 3:
+                    // Step 4 is executed in step4_simulateVote by calling step5_resolve
+                    // The button text should already be "Show Final Telemetry & Hot-Reload"
+                    break;
+                default:
+                    window.location.reload();
+                    return;
+            }
+            updatePlayerStatus();
+            updatePhaseDisplay();
+            updateChecklist();
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            updatePlayerStatus();
+            updatePhaseDisplay();
+            updateChecklist();
+            cooldownValueEl.textContent = gameConfig.roles.find(r => r.id === 'analyst').cooldown;
+            logEvent('SDE System Initialized. Ready to begin demo.', 'system');
+        };
+
+    </script>
+</body>
+</html>
